@@ -1,0 +1,69 @@
+package com.mahindra.digisense.publisher.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+public class PublisherMain {
+
+	// public static void main(String[] args)throws Exception
+	public static void publisher() {
+		// CreateBin.createBinFile();
+
+		File file = new File("C:\\MRV\\rawOutput.bin");
+		byte[] bytes;
+		try {
+			bytes = Files.readAllBytes(file.toPath());
+			PublisherMain.publish(bytes);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public static void publish(byte[] data) {
+		String topic = "LIVE PACKET"; // ALERT PACKET and HISTORY PACKET
+		//String topic = "ALERT PACKET";
+		//String topic = "HISTORY PACKET";
+		
+		// String content = data;
+		int qos = 1;
+		//String broker = "tcp://35.187.148.77:80";//DEV
+		//String broker = "tcp://35.200.135.42:1883";//UAT
+		//String broker = "tcp://34.93.173.102:1883";//PROD
+		String broker = "tcp://34.93.204.163:1883";//LT
+		
+		
+		String clientId = "VernemqEmulatorClient1";
+		MemoryPersistence persistence = new MemoryPersistence();
+		try {
+			MqttClient sampleClient = new MqttClient(broker, clientId, persistence);
+			MqttConnectOptions connOpts = new MqttConnectOptions();
+			connOpts.setCleanSession(true);
+			System.out.println("Connecting to broker: " + broker);
+			sampleClient.connect(connOpts);
+			System.out.println("Connected");
+			System.out.println("Publishing message: " + new String(data));
+			MqttMessage message = new MqttMessage(data);
+			message.setQos(qos);
+			sampleClient.publish(topic, message);
+			System.out.println("Message published");
+			sampleClient.disconnect();
+			System.out.println("Disconnected");
+			// System.exit(0);
+		} catch (MqttException me) {
+			System.out.println("reason " + me.getReasonCode());
+			System.out.println("msg " + me.getMessage());
+			System.out.println("loc " + me.getLocalizedMessage());
+			System.out.println("cause " + me.getCause());
+			System.out.println("excep " + me);
+			me.printStackTrace();
+		}
+	}
+}

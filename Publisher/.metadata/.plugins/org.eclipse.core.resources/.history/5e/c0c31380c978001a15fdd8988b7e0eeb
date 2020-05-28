@@ -1,0 +1,96 @@
+package com.mahindra.digisense.publisher.controller;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Scanner;
+
+import org.eclipse.paho.client.mqttv3.MqttException;
+
+public class CreateBin{
+
+	@SuppressWarnings("resource")
+	public static void main(String[] args) throws MqttException
+	// public static void createBinFile()
+	{
+		/*
+		 * String inputFile = "D:\\Ayisha\\Publisher\\final_packet1.txt"; File file =
+		 * new File(inputFile); try{
+		 * 
+		 * FileReader fr = new FileReader(file); BufferedReader br = new
+		 * BufferedReader(fr); String line; String newStr=""; while((line=
+		 * br.readLine()) != null){ // System.out.println(line); newStr+=line;
+		 * System.out.println(newStr);
+		 */
+		try {
+			Scanner scanner;
+			String line;
+			String newStr = "";
+			scanner = new Scanner(new File("C:\\MRV\\Final.txt"));
+			while (scanner.hasNextLine()) {
+				line = scanner.nextLine();
+				//System.out.println(line);
+				newStr += line;
+				System.out.println(newStr);
+				newStr = newStr.replaceAll("\\s+", "");
+				System.out.println(newStr);
+				char[] stringToCharArray = newStr.toCharArray();
+				/*
+				 * for (char output : stringToCharArray) { System.out.println(output); }
+				 */
+
+				int size = stringToCharArray.length / 2;
+				int[] num = new int[size];
+				String sb = "";
+				for (int i = 0, j = 0; i < (size * 2); i++, j++) {
+					sb += (stringToCharArray[i]);
+					sb += (stringToCharArray[i + 1]);
+					num[j] = Integer.parseInt(sb, 16);
+					i++;
+					sb = "";
+				}
+				// System.out.println("num"+Arrays.toString(num));
+				String outputFile = "C:\\MRV\\rawOutput.bin"
+				try {
+					OutputStream outputStream = new FileOutputStream(outputFile, true);
+					byte finalOpByte = 0;
+					for (int i = 0; i < size; i++) {
+						finalOpByte = (byte) (finalOpByte | num[i] & 0xFF);
+						// System.out.println(" :"+ finalOpByte);
+						outputStream.write(finalOpByte);
+						finalOpByte = 0;
+					}
+					outputStream.close();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+				// Ayisha
+				
+				PublisherMain.publisher();
+                
+				String binFile = "C:\\MRV\\rawOutput.bin";
+				File deleteFile = new File(binFile);
+
+				if (deleteFile.delete()) {
+					System.out.println("File deleted successfully");
+				} else {
+					System.out.println("Failed to delete the file");
+				}
+				
+				//TO DO Sleep
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}																																							
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+}
+
